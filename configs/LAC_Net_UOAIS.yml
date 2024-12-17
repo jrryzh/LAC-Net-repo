@@ -4,7 +4,7 @@ seed: 42
 restore: False
 stage1_iteration: "_UOAIS"
 stage2_iteration: "_100000"
-model_type: 'c2f_seg'
+model_type: 'LAC_Net'
 
 # =========================== DATA Settings ===========================
 input_size: 256

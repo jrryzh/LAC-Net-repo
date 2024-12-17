@@ -12,29 +12,24 @@ from data.dataloader_transformer import load_dataset
 from utils.logger import setup_logger
 from utils.utils import Config, Progbar, to_cuda
 
-from src.image_model_depth_linearfusion import C2F_Seg
+from src.image_model_depth_linearfusion import LAC_Net
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('--seed', type=int, default=42)
-    parser.add_argument('--path', type=str, required=True, help='model checkpoints path')
+    parser.add_argument('--path', type=str, required=True, help='experiment path')
     parser.add_argument('--check_point_path', type=str, default="check_points")
-    parser.add_argument('--Image_W', type=int, default=256)
-    parser.add_argument('--Image_H', type=int, default=256)
-    parser.add_argument('--patch_W', type=int, default=256)
-    parser.add_argument('--patch_H', type=int, default=256)
-    parser.add_argument('--dataset', type=str, default="MOViD_A", help="select dataset")
+    parser.add_argument('--dataset', type=str, default="UOAIS", help="select dataset")
     parser.add_argument('--batch', type=int, default=1)
-    parser.add_argument('--model', type=str, default="original", help="select model type")
     return parser.parse_args()
 
 def setup_environment(args):
     torch.cuda.set_device(0)
     args.path = os.path.join(args.check_point_path, args.path)
     os.makedirs(args.path, exist_ok=True)
-    config_path = os.path.join(args.path, f'c2f_seg_{args.dataset}.yml')
+    config_path = os.path.join(args.path, f'LAC_Net_{args.dataset}.yml')
     if not os.path.exists(config_path):
-        copyfile(f'./configs/c2f_seg_{args.dataset}.yml', config_path)
+        copyfile(f'./configs/LAC_Net_{args.dataset}.yml', config_path)
     config = Config(config_path)
     config.path = args.path
     config.batch_size = args.batch
@@ -60,7 +55,7 @@ def set_random_seed(seed):
 
 def train_model(args, config, logger):
     
-    model = C2F_Seg(config, mode='train', logger=logger)
+    model = LAC_Net(config, mode='train', logger=logger)
     model.load(is_test=False, prefix=config.stage2_iteration)
     model.to(config.device)
     train_dataset, test_dataset = load_dataset(config, args, "train")

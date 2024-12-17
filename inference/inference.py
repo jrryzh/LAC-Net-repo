@@ -7,7 +7,7 @@ from utils.utils import Config, to_cuda
 import re
 from PIL import Image
 import imageio
-from src.image_model_depth_linearfusion import C2F_Seg
+from src.image_model_depth_linearfusion import LAC_Net
 from infdataset import inf_dataloader
 
 def add_mask(mask, img, color1, color_mask=np.array([0, 0, 255]), line_width=1):
@@ -23,7 +23,7 @@ def add_mask(mask, img, color1, color_mask=np.array([0, 0, 255]), line_width=1):
 
 def load_model(config, device):
     # 初始化并加载模型
-    model = C2F_Seg(config, mode='test')
+    model = LAC_Net(config, mode='test')
     model.load(is_test=True, prefix=config.stage2_iteration)
     model = model.to(device)
     model.eval()
@@ -44,8 +44,8 @@ def process_files(directory_path, output_path, model, device):
 
     # 处理每个文件
     for vm_file, filename in zip(visible_mask_files, filename_prefixes):
-        img_path = os.path.join("/cpfs/2926428ee2463e44/user/zjy/code_repo/c2f-seg/inference/one_head/color", filename+".png")
-        depth_path = os.path.join("/cpfs/2926428ee2463e44/user/zjy/code_repo/c2f-seg/inference/one_head/depth", filename+".png")
+        img_path = os.path.join("inference/one_head/color", filename+".png")
+        depth_path = os.path.join("inference/one_head/depth", filename+".png")
         vm_path = os.path.join(directory_path, vm_file)
 
         # 加载数据
@@ -74,10 +74,9 @@ def process_files(directory_path, output_path, model, device):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--seed', type=int, default=42)
-    parser.add_argument('--path', type=str, required=True, help='model checkpoints path')
+    parser.add_argument('--path', type=str, required=True, help='experiment path')
     parser.add_argument('--check_point_path', type=str, default="check_points")
     parser.add_argument('--dataset', type=str, default="UOAIS", help="select dataset")
-    parser.add_argument('--data_type', type=str, default="image", help="select image or video model")
     parser.add_argument('--batch', type=int, default=1)
 
     args = parser.parse_args()
@@ -87,7 +86,7 @@ def main():
     os.makedirs(args.path, exist_ok=True)
 
     # 加载配置文件
-    config_path = os.path.join(args.path, 'c2f_seg_{}.yml'.format(args.dataset))
+    config_path = os.path.join(args.path, 'LAC_Net_{}.yml'.format(args.dataset))
     config = Config(config_path)
 
     # 检查CUDA是否可用
@@ -102,8 +101,8 @@ def main():
     model = load_model(config, device)
 
     # 指定输入和输出路径
-    directory_path = '/cpfs/2926428ee2463e44/user/zjy/code_repo/c2f-seg/inference/grounded_sam_output/one_head'
-    output_path = '/cpfs/2926428ee2463e44/user/zjy/code_repo/c2f-seg/inference/lacnet_output/one_head'
+    directory_path = 'inference/grounded_sam_output/one_head'
+    output_path = 'inference/lacnet_output/one_head'
 
     # 处理文件
     process_files(directory_path, output_path, model, device)

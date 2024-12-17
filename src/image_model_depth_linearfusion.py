@@ -15,9 +15,9 @@ from utils.utils import Config
 from utils.evaluation import evaluation_image
 from utils.loss import CrossEntropyLoss
 
-class C2F_Seg(nn.Module):
+class LAC_Net(nn.Module):
     def __init__(self, config, mode, logger=None, save_eval_dict={}):
-        super(C2F_Seg, self).__init__()
+        super(LAC_Net, self).__init__()
         self.config = config
         self.iteration = 0
         self.sample_iter = 0

@@ -12,16 +12,16 @@ from data.dataloader_transformer import load_dataset
 from utils.logger import setup_logger
 from utils.utils import Config, to_cuda
 
+from src.image_model_depth_linearfusion import LAC_Net
+
 def parse_arguments():
     """解析命令行参数"""
     parser = argparse.ArgumentParser()
     parser.add_argument('--seed', type=int, default=42) 
-    parser.add_argument('--path', type=str, required=True, help='model checkpoints path')
+    parser.add_argument('--path', type=str, required=True, help='experiment path')
     parser.add_argument('--check_point_path', type=str, default="check_points")
-    parser.add_argument('--dataset', type=str, default="MOViD_A", help="select dataset")
-    parser.add_argument('--data_type', type=str, default="image", help="select image or video model")
+    parser.add_argument('--dataset', type=str, default="UOAIS", help="select dataset")
     parser.add_argument('--batch', type=int, default=1)
-    parser.add_argument('--model', type=str, default="original", help="select model type")
     return parser.parse_args()
 
 def setup_environment(args):
@@ -29,9 +29,9 @@ def setup_environment(args):
     args.path = os.path.join(args.check_point_path, args.path)
     os.makedirs(args.path, exist_ok=True)
 
-    config_path = os.path.join(args.path, f'c2f_seg_{args.dataset}.yml')
+    config_path = os.path.join(args.path, f'LAC_Net_{args.dataset}.yml')
     if not os.path.exists(config_path):
-        copyfile(f'./configs/c2f_seg_{args.dataset}.yml', config_path)
+        copyfile(f'./configs/LAC_Net_{args.dataset}.yml', config_path)
     
     config = Config(config_path)
     config.path = args.path
@@ -54,25 +54,6 @@ def setup_environment(args):
     torch.cuda.manual_seed_all(config.seed)
 
     return config, logger
-
-def import_model(args):
-    """根据数据类型和模型类型导入相应的模块"""
-    if args.data_type == "image":
-        model_map = {
-            "original": "src.image_model",
-            "rgbd_6channel": "src.image_model_depth_6channel",
-            "rgbd_fusion": "src.image_model_depth_fusion",
-            "depth_only": "src.image_model_depth",
-            "rgbd_linearfusion": "src.image_model_depth_linearfusion"
-        }
-        module_name = model_map.get(args.model)
-        if module_name:
-            module = __import__(module_name, fromlist=['C2F_Seg'])
-            return module.C2F_Seg
-    elif args.data_type == "video":
-        from src.video_model import C2F_Seg
-        return C2F_Seg
-    raise ValueError("Invalid model type specified.")
 
 def evaluate_model(model, test_loader, config, logger):
     """评估模型性能"""
@@ -109,7 +90,6 @@ def evaluate_model(model, test_loader, config, logger):
 if __name__ == '__main__':
     args = parse_arguments()
     config, logger = setup_environment(args)
-    C2F_Seg = import_model(args)
 
     # 加载测试数据集
     test_dataset = load_dataset(config, args, "test")
@@ -121,7 +101,7 @@ if __name__ == '__main__':
     )
 
     # 初始化和加载模型
-    model = C2F_Seg(config, mode='test', logger=logger)
+    model = LAC_Net(config, mode='test', logger=logger)
     model.load(is_test=True, prefix=config.stage2_iteration)
     model = model.to(config.device)
 
