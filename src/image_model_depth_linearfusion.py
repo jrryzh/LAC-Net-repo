@@ -205,7 +205,7 @@ class LAC_Net(nn.Module):
         return pred_vm_lst, pred_fm_lst
     
     @torch.no_grad()
-    def batch_predict(self, meta, iter, mode, T=3, start_iter=0):
+    def batch_predict(self, meta, iter, mode):
         '''
         :param x:[B,3,H,W] image
         :param c:[b,X,H,W] condition
@@ -241,7 +241,6 @@ class LAC_Net(nn.Module):
         loss_eval["loss_vm"] = loss_vm
         
         return loss_eval
-
 
     def visualize(self, pred_vm, pred_fm, meta, mode, iteration):
         pred_fm = pred_fm.squeeze()

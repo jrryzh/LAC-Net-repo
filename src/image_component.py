@@ -325,34 +325,31 @@ class Refine_Module(nn.Module):
     
     def get_attn_map(self, feature, guidance):
         b,c,h,w = guidance.shape
-        q = torch.flatten(guidance, start_dim=2)
-        v = torch.flatten(feature, start_dim=2)
+        q = torch.flatten(guidance, start_dim=2) # [32, 1, 256]
+        v = torch.flatten(feature, start_dim=2) # [32, 2048, 256]
 
-        k = v * q
-        k = k.sum(dim=-1, keepdim=True) / (q.sum(dim=-1, keepdim=True) + 1e-6)
-        attn = (k.transpose(-2, -1) @  v) / 1
+        k = v * q # [32, 2048, 256]
+        k = k.sum(dim=-1, keepdim=True) / (q.sum(dim=-1, keepdim=True) + 1e-6)  # [32, 2048, 1]
+        attn = (k.transpose(-2, -1) @  v) / 1 # torch.Size([32, 1, 256])
         attn = F.softmax(attn, dim=-1)
         attn = attn.reshape(b, c, h, w)
         return attn
     
     def forward(self, features, coarse_mask):
-        # features:    [B, 2048, 16,   16]
-        # attn_map:    [B, 1,    16,   16]
-        # coarse_mask: [B, 1,    256, 256]
-        feat = self.conv_adapter(features[-1])
+        feat = self.conv_adapter(features[-1]) # features[-1]: torch.Size([32, 2048, 16, 16])
         coarse_mask = F.interpolate(coarse_mask, scale_factor=(1/16))
         attn_map = self.get_attn_map(feat, coarse_mask)
         x = self.conv_in(feat)
         x = torch.cat((x, attn_map, coarse_mask), dim=1)
         x = F.relu(self.bn1(self.lay1(x)))
-        x = F.relu(self.bn2(self.lay2(x)))
+        x = F.relu(self.bn2(self.lay2(x))) # x: torch.Size([32, 128, 16, 16])
         
-        cur_feat = self.adapter1(features[-2])
+        cur_feat = self.adapter1(features[-2]) # features[-2]: torch.Size([32, 1024, 16, 16])
         x = cur_feat + x
         x = F.interpolate(x, size=(32, 32), mode="nearest")
         x = F.relu(self.bn3(self.lay3(x)))
 
-        # TODO: visible mask branch
+        # visible mask branch
         cur_feat_vm = self.adapter2_vm(features[-3])
         x_vm = cur_feat_vm + x
         x_vm = F.interpolate(x_vm, size=(64, 64), mode="nearest")
@@ -365,7 +362,7 @@ class Refine_Module(nn.Module):
         
         x_vm = self.out_lay_vm(x_vm)
 
-        # TODO: full mask branch
+        # full mask branch
         cur_feat_am = self.adapter2_am(features[-3])
         x_am = cur_feat_am + x
         x_am = F.interpolate(x_am, size=(64, 64), mode="nearest")
