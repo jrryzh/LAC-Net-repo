@@ -1,7 +1,4 @@
 from data.dataloader_Fishbowl import FishBowl
-from data.dataloader_UOAIS import UOAIS
-from data.dataloader_KINS import Kins_Fusion_dataset, KINS_Aisformer_VRSP_Intersection
-from data.dataloader_COCOA import COCOA_Fusion_dataset, COCOA_VRSP
 from data.dataloader_UOAIS import Fusion_UOAIS
 from data.dataloader_OSD import Fusion_OSD
 from data.dataloader_UOAIS_allvm import Fusion_UOAIS_ALLVM

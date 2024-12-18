@@ -134,9 +134,9 @@ def validate_and_visualize(args, config, model, sample_iterator):
         img_id = items["img_id"]
         anno_id = items["anno_id"]
         sample_iter = model.sample_iter
-        loss_eval = model.batch_predict_maskgit(items, sample_iter, 'val')
+        loss_eval = model.batch_predict(items, sample_iter, 'val')
         iou = loss_eval['iou'].item() / (loss_eval['iou_count'].item() + 1e-7)
-        invisible_iou_ = loss_eval['invisible_iou_'].item()
+        invisible_iou_ = loss_eval['invisible_iou_'].item() / (loss_eval['iou_count'].item() + 1e-7)
         print(
             "img_id: ", int(anno_id[0].cpu().detach().numpy()), " - ",
             "anno_id: ", int(anno_id[0].cpu().detach().numpy()), " - ",

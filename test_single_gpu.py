@@ -65,7 +65,7 @@ def evaluate_model(model, test_loader, config, logger):
     with torch.no_grad():
         for items in tqdm(test_loader):
             items = to_cuda(items, config.device)
-            loss_eval = model.batch_predict_maskgit(items, iter, 'test', T=3)
+            loss_eval = model.batch_predict(items, iter, 'test', T=3)
             iter += 1
             iou += loss_eval['iou']
             iou_post += loss_eval['iou_post']

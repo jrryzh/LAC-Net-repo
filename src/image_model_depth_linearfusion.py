@@ -205,7 +205,7 @@ class LAC_Net(nn.Module):
         return pred_vm_lst, pred_fm_lst
     
     @torch.no_grad()
-    def batch_predict_maskgit(self, meta, iter, mode, T=3, start_iter=0):
+    def batch_predict(self, meta, iter, mode, T=3, start_iter=0):
         '''
         :param x:[B,3,H,W] image
         :param c:[b,X,H,W] condition
@@ -215,36 +215,31 @@ class LAC_Net(nn.Module):
 
         img_feat = self.img_encoder(meta['img_crop'].permute((0,3,1,2)).to(torch.float32))
         depth_feat = self.depth_encoder(meta['depth_crop'].permute((0,3,1,2)).to(torch.float32))
-        #  TODO: 待确定
+
         fusion_feat = []
         fusion_feat.append(self.rgbd_linearfuse_256(img_feat[0], depth_feat[0]))
         fusion_feat.append(self.rgbd_linearfuse_512(img_feat[1], depth_feat[1]))
         fusion_feat.append(self.rgbd_linearfuse_1024(img_feat[2], depth_feat[2]))
         fusion_feat.append(self.rgbd_linearfuse_2048(img_feat[3], depth_feat[3]))
 
-        # 修改： 将原来的transformer预测的coarse mask改为vm_crop_gt
         pred_fm_crop_old = meta["vm_crop_gt"]
         pred_vm_crop, pred_fm_crop = self.refine_module(fusion_feat, pred_fm_crop_old)
 
         pred_vm_crop = F.interpolate(pred_vm_crop, size=(256, 256), mode="nearest")
         pred_vm_crop = torch.sigmoid(pred_vm_crop)
         loss_vm = self.refine_criterion(pred_vm_crop, meta['vm_crop_gt'])
-        # pred_vm_crop = (pred_vm_crop>=0.5).to(torch.float32)
 
         pred_fm_crop = F.interpolate(pred_fm_crop, size=(256, 256), mode="nearest")
         pred_fm_crop = torch.sigmoid(pred_fm_crop)
         loss_fm = self.refine_criterion(pred_fm_crop, meta['fm_crop'])
-        # pred_fm_crop = (pred_fm_crop>=0.5).to(torch.float32)
 
         pred_vm = self.align_raw_size(pred_vm_crop, meta['obj_position'], meta["vm_pad"], meta)
         pred_fm = self.align_raw_size(pred_fm_crop, meta['obj_position'], meta["vm_pad"], meta)
-        
-        # visualization
-        # self.visualize(pred_vm, pred_fm, meta, mode, iter)
 
         loss_eval = self.loss_and_evaluation(pred_fm, meta, iter, mode, pred_vm=pred_vm)
         loss_eval["loss_fm"] = loss_fm
         loss_eval["loss_vm"] = loss_vm
+        
         return loss_eval
 
 
