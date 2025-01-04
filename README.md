@@ -2,6 +2,10 @@
 
 This repository contains the source code for my paper "LAC-Net: Linear-Fusion Attention-Guided Convolutional Network for Accurate Robotic Grasping Under the Occlusion," accepted at IROS2024.
 
+## TL;DR
+
+This is a state-of-the-art method that uses RGB-D data to predict amodal masks, enabling accurate grasping of occluded objects in complex environments. It is particularly effective in scenarios where objects are hidden beneath fine foam or buried in sand, such as on a beach.
+
 ## Introduction
 
 LAC-Net is a novel convolutional neural network designed to address the challenge of perceiving complete object shapes through visual perception for accurate robotic grasping in occluded environments. While prior studies have focused on segmenting visible parts of objects, LAC-Net explores amodal segmentation to infer occluded parts, enhancing robotic grasping abilities in cluttered scenes. By leveraging a linear-fusion strategy to effectively combine semantic features from RGB images and geometric information from depth images, LAC-Net uses the prior visible mask as an attention map to guide the network in recovering complete object masks. This approach allows for the selection of more accurate and robust grasp points, achieving state-of-the-art performance across various datasets and demonstrating feasibility and robustness in real-world robot experiments.
